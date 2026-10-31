@@ -3,6 +3,9 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// CI passes the keystore through environment variables; local builds stay unsigned.
+val signingKeystore = providers.environmentVariable("SIGNING_KEYSTORE")
+
 android {
     namespace = "neth.iecal.curbox.clocationblocker"
     compileSdk {
@@ -15,14 +18,24 @@ android {
         applicationId = "neth.iecal.curbox.clocationblocker"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = providers.gradleProperty("versionCode").orNull?.toInt() ?: 1
+        versionName = providers.gradleProperty("versionName").orNull ?: "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (signingKeystore.isPresent) create("release") {
+            storeFile = file(signingKeystore.get())
+            storePassword = providers.environmentVariable("SIGNING_STORE_PASSWORD").get()
+            keyAlias = providers.environmentVariable("SIGNING_KEY_ALIAS").get()
+            keyPassword = providers.environmentVariable("SIGNING_KEY_PASSWORD").get()
+        }
+    }
+
     buildTypes {
         release {
+            if (signingKeystore.isPresent) signingConfig = signingConfigs.getByName("release")
             optimization {
                 enable = false
             }
