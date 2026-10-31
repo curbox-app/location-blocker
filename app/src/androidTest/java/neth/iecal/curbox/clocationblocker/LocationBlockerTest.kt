@@ -33,7 +33,7 @@ class LocationBlockerTest {
         }
         val store = PlaceStore(isolated)
         val place = Place(name = "Library", latitude = -12.345, longitude = 77.123, radius = 300,
-            timed = true, startMinute = 1320, endMinute = 360, days = setOf(2, 7))
+            timed = true, startMinute = 1320, endMinute = 360, days = setOf(2, 7), inverse = true)
         try {
             assertTrue(store.save(listOf(place)))
             assertEquals(listOf(place), PlaceStore(isolated).places())

@@ -73,7 +73,7 @@ class CurboxClient(private val context: Context, private val scope: CoroutineSco
                 if (remote.apiVersion() < 3) "UNKNOWN_COMMAND"
                 else if (!remote.isGranted()) "DENIED"
                 else remote.execute("REGISTER_UNLOCK_CONDITION", Bundle().apply {
-                    putString("id", place.id); putString("label", "At ${place.name}".take(100))
+                    putString("id", place.id); putString("label", "${if (place.inverse) "Away from" else "At"} ${place.name}".take(100))
                     putString("activity", "${context.packageName}.CheckLocationActivity")
                 }) ?: "FAILED"
             }.getOrDefault("FAILED")

@@ -125,7 +125,7 @@ class MainActivity : ComponentActivity() {
                 item {
                     Column(Modifier.padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Location Blocker", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
-                        Text("Apps you block in Curbox unlock only when you're at one of your places.",
+                        Text("Choose where the apps you block in Curbox can be unlocked.",
                             style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -225,7 +225,7 @@ class MainActivity : ComponentActivity() {
                 Icon(Icons.Default.Place, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
             }
             Text("No places yet", style = MaterialTheme.typography.titleMedium)
-            Text("Add the places where you're allowed to use your apps, like home or the library.",
+            Text("Add a place where your apps can be unlocked, like home. Or one where they can't, like work.",
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center)
             Button(onClick = onAdd, Modifier.padding(top = 8.dp)) { Icon(Icons.Default.Add, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Add a place") }
@@ -241,7 +241,7 @@ class MainActivity : ComponentActivity() {
                 Row(verticalAlignment = Alignment.Top) {
                     Column(Modifier.weight(1f).padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(place.name, style = MaterialTheme.typography.titleMedium)
-                        Text("Within ${meters(place.radius.toFloat())} · ${schedule(place)}",
+                        Text("${if (place.inverse) "Unlocks outside" else "Unlocks within"} ${meters(place.radius.toFloat())} · ${schedule(place)}",
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Box {
@@ -280,7 +280,7 @@ class MainActivity : ComponentActivity() {
                     listOf(
                         "Open Curbox and pick the app blocker group you want.",
                         "Go to Warning Screen Configuration → Require effort to unlock → Require another app.",
-                        "Choose \"At\" followed by your place's name, then save and turn the group on.",
+                        "Choose \"At …\" or \"Away from …\" with your place's name, then save and turn the group on.",
                         "Make sure Curbox's accessibility service is on, and don't block Location Blocker itself."
                     ).forEachIndexed { i, step ->
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

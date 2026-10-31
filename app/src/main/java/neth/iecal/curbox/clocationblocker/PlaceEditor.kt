@@ -50,6 +50,7 @@ fun PlaceEditor(onDismiss: () -> Unit, onSave: (Place) -> Unit) {
     var coordinates by remember { mutableStateOf("") }
     var radius by remember { mutableIntStateOf(150) }
     var precision by remember { mutableStateOf<Int?>(null) }
+    var inverse by remember { mutableStateOf(false) }
     var rejectMock by remember { mutableStateOf(true) }
     var timed by remember { mutableStateOf(false) }
     var start by remember { mutableIntStateOf(540) }
@@ -102,7 +103,7 @@ fun PlaceEditor(onDismiss: () -> Unit, onSave: (Place) -> Unit) {
                             }
                             if (error == null) onSave(Place(name = name.trim(), latitude = lat!!, longitude = lon!!, radius = radius,
                                 accuracy = accuracy, rejectMock = rejectMock, timed = timed, startMinute = start, endMinute = end,
-                                days = if (timed) days else (1..7).toSet()))
+                                days = if (timed) days else (1..7).toSet(), inverse = inverse))
                         }) { Text("Save place") }
                     }
                 }
@@ -118,6 +119,19 @@ fun PlaceEditor(onDismiss: () -> Unit, onSave: (Place) -> Unit) {
                     if (name.isBlank()) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         NAME_IDEAS.forEach { idea -> SuggestionChip(onClick = { name = idea }, label = { Text(idea) }) }
                     }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SectionLabel("Blocked apps can be unlocked")
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        listOf("Only here" to false, "Anywhere but here" to true).forEachIndexed { i, (label, value) ->
+                            SegmentedButton(selected = inverse == value, onClick = { inverse = value },
+                                shape = SegmentedButtonDefaults.itemShape(i, 2)) { Text(label) }
+                        }
+                    }
+                    Text(if (inverse) "Use this to keep apps locked at a place like work or the library."
+                        else "Apps stay locked everywhere else.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -186,7 +200,7 @@ fun PlaceEditor(onDismiss: () -> Unit, onSave: (Place) -> Unit) {
 
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     SectionLabel("When")
-                    SettingSwitch("Only at certain times", "Outside these times, apps stay blocked even here.", timed) { timed = it }
+                    SettingSwitch("Only at certain times", "Outside these times, apps stay locked wherever you are.", timed) { timed = it }
                     if (timed) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             listOf(2, 3, 4, 5, 6, 7, 1).forEach { day ->

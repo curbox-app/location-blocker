@@ -35,11 +35,12 @@ fun rememberCheck(place: Place, attempt: Int): CheckState {
     return state
 }
 
-/** The area as a circle with you as a dot, north up. The halo is how unsure the phone is. */
+/** The area as a circle with you as a dot, north up. The halo is how unsure the phone is; a red area is one to stay out of. */
 @Composable
-fun PlaceDiagram(radius: Int, reading: Reading?, passed: Boolean?, modifier: Modifier = Modifier) {
+fun PlaceDiagram(radius: Int, inverse: Boolean, reading: Reading?, passed: Boolean?, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val tone = when (passed) { true -> colors.primary; false -> colors.error; null -> colors.onSurfaceVariant }
+    val zone = if (inverse) colors.error else colors.primary
     val distance by animateFloatAsState(reading?.distance ?: 0f, label = "distance")
     val accuracy by animateFloatAsState(reading?.accuracy?.takeIf { it.isFinite() } ?: 0f, label = "accuracy")
     val bearing = reading?.bearing ?: 0f
@@ -47,9 +48,9 @@ fun PlaceDiagram(radius: Int, reading: Reading?, passed: Boolean?, modifier: Mod
         val center = Offset(size.width / 2, size.height / 2)
         val span = (radius * 1.35f).coerceAtLeast(min(distance + accuracy, radius * 4f) * 1.1f)
         val scale = (size.minDimension / 2) / span
-        drawCircle(colors.primary.copy(alpha = 0.10f), radius * scale, center)
-        drawCircle(colors.primary.copy(alpha = 0.55f), radius * scale, center, style = Stroke(1.5.dp.toPx()))
-        drawCircle(colors.primary.copy(alpha = 0.7f), 3.dp.toPx(), center)
+        drawCircle(zone.copy(alpha = 0.10f), radius * scale, center)
+        drawCircle(zone.copy(alpha = 0.55f), radius * scale, center, style = Stroke(1.5.dp.toPx()))
+        drawCircle(zone.copy(alpha = 0.7f), 3.dp.toPx(), center)
         if (reading != null) {
             val angle = Math.toRadians(bearing.toDouble())
             val reach = min(distance * scale, size.minDimension / 2 - 8.dp.toPx())
@@ -67,7 +68,7 @@ fun CheckView(place: Place, state: CheckState) {
     val reading = when (state) { is CheckState.Checking -> state.reading; is CheckState.Done -> state.verdict.reading }
     val passed = verdict?.let { it.problem == null }
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        PlaceDiagram(place.radius, reading, passed)
+        PlaceDiagram(place.radius, place.inverse, reading, passed)
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
             when {
                 verdict == null -> {
@@ -77,8 +78,9 @@ fun CheckView(place: Place, state: CheckState) {
                     LinearProgressIndicator(Modifier.width(120.dp).padding(top = 6.dp))
                 }
                 passed == true -> {
-                    Text("You're at ${place.name}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                    reading?.let { Text(if (it.distance < 10) "Right in the middle" else "About ${meters(it.distance)} from the middle", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    Text(if (place.inverse) "You're away from ${place.name}" else "You're at ${place.name}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                    reading?.let { Text(when { place.inverse -> "About ${meters(it.distance)} away"; it.distance < 10 -> "Right in the middle"; else -> "About ${meters(it.distance)} from the middle" },
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
                 else -> Text(verdict.problem.orEmpty(), style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
             }

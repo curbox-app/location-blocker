@@ -10,6 +10,14 @@ class LocationPolicyTest {
         assertNotNull(LocationPolicy.rejection(place, 176f, 50f, 1000, false))
         assertNotNull(LocationPolicy.rejection(place, 250f, 5f, 1000, false))
     }
+    @Test fun inversePlacePassesOnlyWhenClearlyOutside() {
+        val away = place.copy(inverse = true)
+        assertNull(LocationPolicy.rejection(away, 226f, 50f, 1000, false))
+        assertNotNull(LocationPolicy.rejection(away, 225f, 50f, 1000, false))
+        assertNotNull(LocationPolicy.rejection(away, 0f, 10f, 1000, false))
+        assertNotNull(LocationPolicy.rejection(away, 5000f, 101f, 1000, false))
+        assertNotNull(LocationPolicy.rejection(away, 5000f, 10f, 1000, true))
+    }
     @Test fun defaultPrecisionScalesWithArea() {
         assertEquals(25, defaultAccuracy(50))
         assertEquals(75, defaultAccuracy(150))

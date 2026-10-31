@@ -19,7 +19,9 @@ data class Place(
     val timed: Boolean = false,
     val startMinute: Int = 540,
     val endMinute: Int = 1080,
-    val days: Set<Int> = (1..7).toSet()
+    val days: Set<Int> = (1..7).toSet(),
+    /** When true, apps unlock anywhere except inside this area. */
+    val inverse: Boolean = false
 ) {
     fun inHours(day: Int, minute: Int): Boolean {
         if (!timed) return true
@@ -47,7 +49,8 @@ class PlaceStore(context: Context) {
             Place(j.getString("id"), j.getString("name"), j.getDouble("lat"), j.getDouble("lon"),
                 j.getInt("radius"), j.getInt("accuracy"), j.getBoolean("rejectMock"),
                 j.getBoolean("timed"), j.getInt("start"), j.getInt("end"),
-                j.getString("days").split(",").filter { it.isNotEmpty() }.map { it.toInt() }.toSet())
+                j.getString("days").split(",").filter { it.isNotEmpty() }.map { it.toInt() }.toSet(),
+                j.optBoolean("inverse", false))
         } }
     } catch (_: Exception) { emptyList() }
     fun save(places: List<Place>): Boolean = prefs.edit().putString("places", JSONArray().apply {
@@ -55,7 +58,7 @@ class PlaceStore(context: Context) {
             put("id", p.id); put("name", p.name); put("lat", p.latitude); put("lon", p.longitude)
             put("radius", p.radius); put("accuracy", p.accuracy); put("rejectMock", p.rejectMock)
             put("timed", p.timed); put("start", p.startMinute); put("end", p.endMinute)
-            put("days", p.days.sorted().joinToString(","))
+            put("days", p.days.sorted().joinToString(",")); put("inverse", p.inverse)
         }) }
     }.toString()).commit()
 }
@@ -64,8 +67,9 @@ object LocationPolicy {
     const val MAX_AGE_MS = 30_000L
 
     /**
-     * Half of the reported uncertainty must still fit inside the area. Requiring all of it made
-     * honest indoor readings fail near the middle; ignoring it lets a rough fix near the edge pass.
+     * Half of the reported uncertainty must still fit inside the area (or, for an inverse place,
+     * outside it). Requiring all of it made honest indoor readings fail; ignoring it lets a rough
+     * fix near the edge pass.
      */
     fun rejection(place: Place, distance: Float, accuracy: Float, ageMs: Long, mock: Boolean): String? = when {
         !place.inHoursNow() -> "${place.name} only counts during the times you set. Apps stay blocked for now."
@@ -74,6 +78,11 @@ object LocationPolicy {
         !accuracy.isFinite() || accuracy <= 0 -> "Couldn't get a clear location. Move near a window or step outside."
         accuracy > place.accuracy -> "Your location is too rough right now (±${accuracy.roundToInt()} m). Move near a window or step outside."
         !distance.isFinite() -> "Couldn't work out where you are. Try again."
+        place.inverse -> when {
+            distance - accuracy / 2 > place.radius -> null
+            distance > place.radius -> "You're just outside ${place.name}. Move a little further away."
+            else -> "You're at ${place.name}. Apps only unlock away from here."
+        }
         distance + accuracy / 2 <= place.radius -> null
         distance <= place.radius -> "You're right at the edge of ${place.name}. Move a little closer to the middle."
         else -> "You're about ${meters(distance)} from ${place.name}. You need to be within ${meters(place.radius.toFloat())}."

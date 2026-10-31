@@ -6,9 +6,9 @@ A minimal Android location requirement provider for Curbox API 3. Curbox blocks 
 
 1. Install this app and Curbox with API version 3 or newer.
 2. Under **Finish setting up**, tap **Connect** and approve the app in Curbox, then allow precise location and make sure location is on. Approval grants the full Curbox public API; this app uses provider registration, removal, and listing only.
-3. Tap **Add a place**, stand in the middle of it, and tap **Use where I am now** (or type coordinates). Choose how big the area is and, optionally, the days and times it counts.
+3. Tap **Add a place** and choose whether blocked apps can be unlocked **Only here** or **Anywhere but here** (to keep apps locked at work, for example). Stand in the middle of it, and tap **Use where I am now** (or type coordinates). Choose how big the area is and, optionally, the days and times it counts.
 4. Saved places are added to Curbox automatically once it's connected. Places saved earlier are added as soon as you connect.
-5. In Curbox, configure an app blocker group and select its apps. Open **Warning Screen Configuration → Require effort to unlock → Require another app**, then choose **At [place]**. Save and enable the group. Enable Curbox's accessibility service.
+5. In Curbox, configure an app blocker group and select its apps. Open **Warning Screen Configuration → Require effort to unlock → Require another app**, then choose **At [place]** or **Away from [place]**. Save and enable the group. Enable Curbox's accessibility service.
 6. Keep Location Blocker outside your blocked apps. Use **Test here** to try it, then test the actual Curbox warning screen.
 
 Each group can select one requirement. Multiple saved places can be assigned to different groups. Creating or editing Curbox groups is not exposed by the API.
@@ -16,7 +16,7 @@ Each group can select one requirement. Multiple saved places can be assigned to 
 ## Behavior and limits
 
 - Every check listens to GPS, network, and (Android 12+) fused location at the same time, using live fixes only, never cached ones. It approves as soon as one fix passes; otherwise it keeps listening for up to 20 seconds and judges the most precise fix it got. Fixes older than 30 seconds, permission denial, disabled location, missing configuration, and no fix all deny access.
-- A fix passes when its distance from the center **plus half** its reported uncertainty fits inside the area, and its uncertainty is within the place's required precision (half the area size, 20–100 m, unless changed under **More options**). Android location accuracy is an estimate, not a guarantee of physical presence.
+- A fix passes when its distance from the center **plus half** its reported uncertainty fits inside the area (for **Anywhere but here** places, when its distance **minus half** the uncertainty is outside it), and its uncertainty is within the place's required precision (half the area size, 20–100 m, unless changed under **More options**). Android location accuracy is an estimate, not a guarantee of physical presence.
 - A place's center is the precision-weighted average of several live fixes (up to 30 seconds, or until five fixes reach ±12 m), so one noisy reading doesn't shift it.
 - Mock fixes are rejected by default. This does not make the app resistant to rooted-device tampering or all location spoofing.
 - Access hours use the device's local date/time. Overnight hours belong to the day on which they start; equal start/end means the full selected day. Device time changes affect this schedule.

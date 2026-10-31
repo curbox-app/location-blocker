@@ -51,7 +51,7 @@ class CheckLocationActivity : ComponentActivity() {
                 Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(Modifier.weight(1f))
-                    Text("Checking you're at", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(if (place.inverse) "Checking you're away from" else "Checking you're at", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(place.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(32.dp))
                     CheckView(place, state ?: CheckState.Checking(null))
