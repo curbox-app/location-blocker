@@ -115,8 +115,9 @@ class MainActivity : ComponentActivity() {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbar) },
             floatingActionButton = {
-                if (places.isNotEmpty() && places.size < 50) ExtendedFloatingActionButton(onClick = { editing = true },
-                    icon = { Icon(Icons.Default.Add, null) }, text = { Text("Add place") })
+                if (places.isNotEmpty() && places.size < 50) ExtendedFloatingActionButton(onClick = { editing = true }) {
+                    Icon(Icons.Default.Add, null); Spacer(Modifier.width(12.dp)); Text("Add place")
+                }
             }
         ) { padding ->
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(
