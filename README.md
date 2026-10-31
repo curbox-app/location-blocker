@@ -5,19 +5,19 @@ A minimal Android location requirement provider for Curbox API 3. Curbox blocks 
 ## Set up
 
 1. Install this app and Curbox with API version 3 or newer.
-2. Open **Setup & connection**, choose the intended Curbox installation, and tap **Approve in Curbox**. Approval grants the full Curbox public API; this app uses provider registration and removal only.
-3. Allow precise location and turn on Android location services.
-4. Add a place using your current location or latitude/longitude. Choose its radius. Optional settings include maximum uncertainty, rejection of Android mock locations, weekdays, and access hours (including overnight windows).
-5. Tap **Publish to Curbox** for the saved place.
-6. In Curbox, configure an app blocker group and select its apps. Open **Warning Screen Configuration → Require effort to unlock → Require another app**, then choose **At [place]**. Save and enable the group. Enable Curbox's accessibility service.
-7. Keep Location Blocker outside your blocked apps. Test with **Check here**, then test the actual Curbox warning screen.
+2. Under **Finish setting up**, tap **Connect** and approve the app in Curbox, then allow precise location and make sure location is on. Approval grants the full Curbox public API; this app uses provider registration, removal, and listing only.
+3. Tap **Add a place**, stand in the middle of it, and tap **Use where I am now** (or type coordinates). Choose how big the area is and, optionally, the days and times it counts.
+4. Saved places are added to Curbox automatically once it's connected. Places saved earlier are added as soon as you connect.
+5. In Curbox, configure an app blocker group and select its apps. Open **Warning Screen Configuration → Require effort to unlock → Require another app**, then choose **At [place]**. Save and enable the group. Enable Curbox's accessibility service.
+6. Keep Location Blocker outside your blocked apps. Use **Test here** to try it, then test the actual Curbox warning screen.
 
 Each group can select one requirement. Multiple saved places can be assigned to different groups. Creating or editing Curbox groups is not exposed by the API.
 
 ## Behavior and limits
 
-- Every unlock attempt requests a new location, with a 25-second acquisition timeout. Fixes older than 30 seconds are rejected. Permission denial, disabled providers, missing configuration, and unavailable location deny access.
-- The measured distance **plus** reported horizontal accuracy must fit inside the radius. This makes the boundary conservative. Android location accuracy is an estimate, not a guarantee of physical presence.
+- Every check listens to GPS, network, and (Android 12+) fused location at the same time, using live fixes only, never cached ones. It approves as soon as one fix passes; otherwise it keeps listening for up to 20 seconds and judges the most precise fix it got. Fixes older than 30 seconds, permission denial, disabled location, missing configuration, and no fix all deny access.
+- A fix passes when its distance from the center **plus half** its reported uncertainty fits inside the area, and its uncertainty is within the place's required precision (half the area size, 20–100 m, unless changed under **More options**). Android location accuracy is an estimate, not a guarantee of physical presence.
+- A place's center is the precision-weighted average of several live fixes (up to 30 seconds, or until five fixes reach ±12 m), so one noisy reading doesn't shift it.
 - Mock fixes are rejected by default. This does not make the app resistant to rooted-device tampering or all location spoofing.
 - Access hours use the device's local date/time. Overnight hours belong to the day on which they start; equal start/end means the full selected day. Device time changes affect this schedule.
 - Only the selected Curbox package may launch a successful provider check, using a verified activity caller and a matching saved requirement ID. Approvals echo only the current request ID. Curbox validates its own authorization, attempt expiry, and warning configuration.
@@ -36,7 +36,7 @@ Requires JDK 21, Android SDK 37, and the checked-in Gradle wrapper.
 
 APK: `app/build/outputs/apk/debug/app-debug.apk`.
 
-Unit tests cover conservative boundaries, stale/invalid/mock fixes, regular and overnight schedules, week rollover, and time parsing. Instrumentation checks cover setup UI, local persistence, and rejection of unauthenticated exported-activity launches.
+Unit tests cover the area boundary, default precision, stale/invalid/mock fixes, regular and overnight schedules, week rollover, and coordinate parsing. Instrumentation checks cover setup UI, local persistence, and rejection of unauthenticated exported-activity launches.
 
 ```sh
 ./gradlew :app:connectedDebugAndroidTest

@@ -17,12 +17,12 @@ class LocationBlockerTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     @Test fun setupAndEditorExplainTheirActions() {
-        compose.onNodeWithText("Stay in your place.").assertIsDisplayed()
-        compose.onNodeWithText("+ Add place").performScrollTo().performClick()
-        compose.onNodeWithText("Add an allowed place").assertIsDisplayed()
+        compose.onNodeWithText("Location Blocker").assertIsDisplayed()
+        compose.onAllNodes(hasText("Add a place") or hasText("Add place")).onFirst().performClick()
+        compose.onNodeWithText("New place").assertIsDisplayed()
         compose.onNodeWithText("Save place").performClick()
-        compose.onNodeWithText("Name this place first.").assertExists()
-        compose.onNodeWithText("Cancel").performClick()
+        compose.onNodeWithText("Give this place a name.").assertExists()
+        compose.onNodeWithContentDescription("Cancel").performClick()
     }
 
     @Test fun placesRoundTripWithoutChangingRequirementMeaning() {

@@ -5,16 +5,22 @@ import org.junit.Test
 
 class LocationPolicyTest {
     private val place = Place(name = "Library", latitude = 12.0, longitude = 77.0, radius = 200)
-    @Test fun uncertaintyMustFitEntirelyInsideBoundary() {
-        assertNull(LocationPolicy.rejection(place, 150f, 50f, 1000, false))
-        assertNotNull(LocationPolicy.rejection(place, 151f, 50f, 1000, false))
+    @Test fun halfOfUncertaintyMustFitInsideBoundary() {
+        assertNull(LocationPolicy.rejection(place, 175f, 50f, 1000, false))
+        assertNotNull(LocationPolicy.rejection(place, 176f, 50f, 1000, false))
         assertNotNull(LocationPolicy.rejection(place, 250f, 5f, 1000, false))
+    }
+    @Test fun defaultPrecisionScalesWithArea() {
+        assertEquals(25, defaultAccuracy(50))
+        assertEquals(75, defaultAccuracy(150))
+        assertEquals(100, defaultAccuracy(1000))
+        assertEquals(75, Place(name = "Gym", latitude = 0.0, longitude = 0.0, radius = 150).accuracy)
     }
     @Test fun staleFutureMockAndUncertainFixesAreDenied() {
         assertNotNull(LocationPolicy.rejection(place, 0f, 10f, 30_001, false))
         assertNotNull(LocationPolicy.rejection(place, 0f, 10f, -1, false))
         assertNotNull(LocationPolicy.rejection(place, 0f, 10f, 0, true))
-        assertNotNull(LocationPolicy.rejection(place, 0f, 51f, 0, false))
+        assertNotNull(LocationPolicy.rejection(place, 0f, 101f, 0, false))
         assertNotNull(LocationPolicy.rejection(place, 0f, Float.NaN, 0, false))
         assertNotNull(LocationPolicy.rejection(place, Float.NaN, 10f, 0, false))
         assertNotNull(LocationPolicy.rejection(place, 0f, 0f, 0, false))
@@ -39,10 +45,12 @@ class LocationPolicyTest {
         assertFalse(scheduled.inHours(3, 600))
         assertTrue(scheduled.copy(startMinute = 0, endMinute = 0).inHours(2, 1439))
     }
-    @Test fun timeInputRejectsInvalidTimes() {
-        assertEquals(1439, parseClock("23:59"))
-        assertNull(parseClock("24:00"))
-        assertNull(parseClock("9:00"))
-        assertNull(parseClock("12:60"))
+    @Test fun coordinatesParseLikeMapAppsCopyThem() {
+        assertEquals(12.9716 to 77.5946, parseCoordinates("12.9716, 77.5946"))
+        assertEquals(-33.8 to 151.2, parseCoordinates(" (-33.8,151.2) "))
+        assertEquals(1.0 to 2.0, parseCoordinates("1 2"))
+        assertNull(parseCoordinates("91, 0"))
+        assertNull(parseCoordinates("12.97"))
+        assertNull(parseCoordinates("north, south"))
     }
 }
